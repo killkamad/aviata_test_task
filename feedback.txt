@@ -1,0 +1,64 @@
+Фитбэк от команды ниже:
+Review
+(✓)1. Думаю можно было шедулер по валютам вытащить отдельно от settings.py
+Все такие settings.py отвечает настройки. Плюс подключения к редису и другие параметры желательно
+передавать через переменные окружения, локально через docker-compose
+
+(✓)urls.py
+Необязательно admin панель в рамках задачи
+
+(✓)Функции желательно называть ориентируясь на домен, объект с чем эта функция взаимодействует,
+избегая общих слов: data, items, result
+
+(✓)fetch_search_results()
+
+(✓)views.py
+search_id = str(uuid.uuid4()) - мне кажется этого достаточно
+
+(✓)Не понятно почему urls_list передается в request.body. Вызывающая сторона не должна знать что
+есть provider_a, provider_b - их может быть много, и фронт об этом не должен знать
+
+(✓)create_task() - желательно использовать какие нибудь task management системы (celery, dramatiq)
+таски в event loop могут не доработать при перезагрузке сервиса
+
+(✓)Все функции внутри utils.py
+Желательно разделять по зонам ответственности - код будет аккуратней, и можно будет писать
+хорошие юнит тесты
+search.py
+
+init()
+get_result()
+add_price_and_recalculate()
+currencies.py
+
+get_rates()
+update_from_national_bank()
+views.py get_provider_results
+
+(✓)Функция должна получать результаты поиска. Здесь же проверяется наличие валют в кэше. Можно сделать так:
+
+async def get_provider_results(request, search_id, currency):
+
+currency = currency.upper()
+search_resuls = cache.get(f'{search_id}-{currency}')
+if not search_resuls:
+return JsonResponse({
+'search_id': search_id,
+'status': 'PENDING',
+'items': []
+})
+
+# внутри get_rates() - сама проверка наличия валют в кэше, и сохранение при необходимости
+currency_rates = awati currencies.get_rates()
+utils.py
+(✓)get_provider_data() почему cache.set('provider_a_cache')
+для чего передается request - слишком тяжелый объект
+
+(✓)(Так как микросервисы в одной папке сделал это для сокращения кода)Плюс желательно эти функции чтобы были в самих провайдерах A, B
+
+(✓)asyncio.ensure_future(fetch())
+Не совсем понял для чего, обычного gather кажется достаточно
+
+Нет модульных тестов. Желательно код структурировать модульно чтобы была возможность покрывать тестами
+
+(✓)Желательно использовать docker - сейчас это уже является стандартом

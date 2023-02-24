@@ -18,15 +18,11 @@ from pathlib import Path
 BASE_DIR = Path(__file__).resolve().parent.parent
 sys.path.append(os.path.abspath(BASE_DIR.parent))  # adding main folder with base_setting file
 from base_settings import *
-from utils import download_currency_rates_daily
-from apscheduler.triggers.cron import CronTrigger
-from apscheduler.schedulers.asyncio import AsyncIOScheduler
-
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/3.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-6=w8j+=v$m-n#1l(hp96_$n+(9!oxs)+=sp0ex=p)pdu^f-1i7'
+SECRET_KEY = str(os.getenv('SECRET_KEY_AIRFLOW', None))
 
 # SECURITY WARNING: don't run with debug turned on in production!
 
@@ -47,7 +43,7 @@ DATABASES = {
 CACHES = {
     "default": {
         "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": "redis://127.0.0.1:6379/",
+        "LOCATION": str(os.getenv('REDIS_LOCATION_DJANGO', "redis://127.0.0.1:6379/")),
         "KEY_PREFIX": "airflow",
         "OPTIONS": {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
@@ -55,17 +51,12 @@ CACHES = {
     }
 }
 
-CELERY_BROKER_URL = 'redis://localhost:6379/1'
-CELERY_RESULT_BACKEND = 'redis://localhost:6379/1'
+CELERY_BROKER_URL = os.getenv('CELERY_BROKER_URL', 'redis://localhost:6379/1')
+CELERY_RESULT_BACKEND = os.getenv('CELERY_RESULT_BACKEND', 'redis://localhost:6379/1')
+CELERY_ACCEPT_CONTENT = ['application/json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_IMPORTS = ('airflow.celery_tasks',)
 
-# Everyday at 12 pm, currencies will be updated
-scheduler = AsyncIOScheduler()
-trigger = CronTrigger(
-    year="*", month="*", day="*", hour="12", minute="0", second="*"
-)
-scheduler.start()
-scheduler.add_job(
-    download_currency_rates_daily,
-    trigger=trigger,
-    name='download_currency_rates'
-)
+PROVIDER_A_URL = str(os.getenv('PROVIDER_A_URL', 'http://127.0.0.1:9001/search/'))
+PROVIDER_B_URL = str(os.getenv('PROVIDER_B_URL', 'http://127.0.0.1:9002/search/'))

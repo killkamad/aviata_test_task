@@ -1,0 +1,67 @@
+version: "3.9"
+
+services:
+  provider-a:
+    build: .
+    command: >
+      sh -c "cd provider_a &&
+             uvicorn provider_a.asgi:application --port 9001 --host 0.0.0.0 --reload"
+    volumes:
+      - .:/code
+    ports:
+      - 9001:9001
+    env_file:
+      - .env
+  provider-b:
+    build: .
+    command: >
+      sh -c "cd provider_b &&
+             uvicorn provider_b.asgi:application --port 9002 --host 0.0.0.0 --reload"
+    volumes:
+      - .:/code
+    ports:
+      - 9002:9002
+    env_file:
+      - .env
+  airflow:
+    build: .
+    command: >
+      sh -c "cd airflow &&
+             uvicorn airflow.asgi:application --port 9000 --host 0.0.0.0 --reload"
+    volumes:
+      - .:/code
+    ports:
+      - 9000:9000
+    env_file:
+      - .env
+  redis:
+    image: redis:alpine
+  celery-airflow:
+    restart: always
+    build:
+      context: .
+    entrypoint: /code/airflow/celery_entrypoint.sh
+    volumes:
+      - .:/code
+    env_file:
+      - .env
+    depends_on:
+      - redis
+      - provider-a
+      - provider-b
+      - airflow
+  celery-beat:
+    restart: always
+    build:
+        context: .
+    entrypoint: /code/airflow/celery_beat_entrypoint.sh
+    volumes:
+      - .:/code
+    env_file:
+      - .env
+    depends_on:
+      - redis
+      - provider-a
+      - provider-b
+      - airflow
+      - celery-airflow

@@ -22,7 +22,7 @@ from base_settings import *
 # See https://docs.djangoproject.com/en/3.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-2(hl5!oh+8usi83l!6#l$du$1mk1%4)pttzbw9z#utq)y^u4tn'
+SECRET_KEY = str(os.getenv('SECRET_KEY_PROVIDER_B', None))
 
 ROOT_URLCONF = 'provider_b.urls'
 
@@ -43,7 +43,7 @@ DATABASES = {
 CACHES = {
     "default": {
         "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": "redis://127.0.0.1:6379/",
+        "LOCATION": str(os.getenv('REDIS_LOCATION_DJANGO', "redis://127.0.0.1:6379/")),
         "KEY_PREFIX": "provider_b",
         "OPTIONS": {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",

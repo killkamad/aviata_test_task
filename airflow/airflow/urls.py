@@ -13,12 +13,10 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
-from django.contrib import admin
 from django.urls import path
-from airflow.views import fetch_data_from_providers, get_provider_results
+from airflow.views import fetch_from_providers, get_providers_data_with_currency_prices
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
-    path('search/', fetch_data_from_providers, name='search'),
-    path('results/<str:search_id>/<str:currency>/', get_provider_results, name='results'),
+    path('search/', fetch_from_providers, name='search'),
+    path('results/<str:search_id>/<str:currency>/', get_providers_data_with_currency_prices, name='results'),
 ]
